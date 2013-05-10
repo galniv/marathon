@@ -34,59 +34,76 @@ module.exports = class Project extends EventEmitter
       # begin startup
       @emit "starting"
       @status = "starting"
-      log.info "[#{@name}] starting on #{options.port} ..."
 
       # if the project doesn't have a start command, destroy this project
       # and return false
       @package = @path('package.json')
-      if not @package.exists() or not @package.contents().scripts?.start?
-        log.warn "#{@name} does not specify an `npm start` command, skipping ..."
+      if not @package.exists()
+        log.warn "#{@name} does not exist, skipping ..."
         @destroy()
         @server = false
         return false
 
-      # the project has a start command, so start it up
-      else
+      if @package.contents()?.port?
+        options.port = @package.contents().port
 
+      log.info "[#{@name}] starting on #{options.port} ..."
+
+      # the project has a package, so start it up
+      if @package.contents()?.scripts?.start?
         # get the start command and the process environment
         command = @package.contents().scripts.start.split ' '
-        env = @getEnv port: options.port
+      else
+        log.warn "#{@name} does not define script.start, using 'node .' instead ..."
+        command = ["node", "."]
 
-        # spawn the process
-        @process = cp.spawn command.shift(), command,
-          cwd: @path.toString()
-          env: env
+      env = @getEnv port: options.port
+      
+      if @package.contents()?.workingDir?
+        workingDir = @package.contents()?.workingDir
+      else
+        workingDir = @path.toString()
 
-        # pipe data events
-        @process.stdout.on 'data', (d) =>
-          @emit 'log', message: d.toString()
-          fs.appendFile @log.toString(), d
-        @process.stderr.on 'data', (d) =>
-          @emit 'log', message: d.toString(), type: 'err'
-          fs.appendFile @log.toString(), d
+      # spawn the process
+      @process = cp.spawn command.shift(), command,
+        cwd: workingDir
+        env: env
 
-        # on exit, update status and pipe the event
-        @process.on 'exit', (code, signal) =>
-          @status = "stopped"
-          log.info "[#{@name}] stopped"
-          @emit 'stopped', code: code
+      # pipe data events
+      @process.stdout.on 'data', (d) =>
+        @emit 'log', message: d.toString()
+        fs.appendFile @log.toString(), d
+      @process.stderr.on 'data', (d) =>
+        @emit 'log', message: d.toString(), type: 'err'
+        fs.appendFile @log.toString(), d
 
-        checkStart = =>
-          if @status is "starting"
-            @isResponding (responding)=>
-              if @status is "starting"
-                if !responding
-                  clearTimeout(@checkTimer)
-                  @checkTimer = setTimeout =>
-                    checkStart()
-                  , 500
-                else
-                  @status = "started"
-                  @emit 'started'
-                  log.info "[#{@name}] started"
+      # on exit, update status and pipe the event
+      @process.on 'exit', (code, signal) =>
+        @status = "stopped"
+        log.info "[#{@name}] stopped"
+        @emit 'stopped', code: code
 
-        checkStart()
-        return true
+      checkStart = (counter=0) =>
+        if counter >= 10
+          @status = "unknown"
+          @emit 'unknown'
+          log.info "[#{@name}] unknown"
+          return
+        if @status is "starting"
+          @isResponding (responding)=>
+            if @status is "starting"
+              if !responding
+                clearTimeout(@checkTimer)
+                @checkTimer = setTimeout =>
+                  checkStart counter + 1
+                , 500
+              else
+                @status = "started"
+                @emit 'started'
+                log.info "[#{@name}] started"
+
+      checkStart()
+      return true
 
   # shut down the server
   stop: =>
@@ -138,7 +155,10 @@ module.exports = class Project extends EventEmitter
         clearTimeout timer
         cb(true)
       else
-        cb(false)
+        if err?.code isnt "ECONNREFUSED"
+          cb(true)
+        else
+          cb(false)
 
 
   tail: (cb) ->

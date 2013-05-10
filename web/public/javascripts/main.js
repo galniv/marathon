@@ -11,7 +11,7 @@
     var $project, $status, symbol;
     $project = $(".project[data-name='" + name + "']");
     $status = $project.find(".status");
-    $status.removeClass("success warning error busy");
+    $status.removeClass("success warning error busy unknown");
     switch (status) {
       case "starting":
       case "stopping":
@@ -31,6 +31,11 @@
         $project.find('.restart,.stop').addClass('hide');
         $project.find('.start').removeClass('hide');
         symbol = "off";
+        break;
+      case "unknown":
+        $status.addClass("unknown");
+        $project.find('.start,.restart,.stop').removeClass('hide');
+        symbol = "question-sign";
         break;
       default:
         $project.find('.start').removeClass('hide');
@@ -137,6 +142,11 @@
   socket.on('stopped', function(d) {
     console.log("stopped");
     return updateStatus(d.project, 'stopped');
+  });
+
+  socket.on('unknown', function(d) {
+    console.log("unknown");
+    return updateStatus(d.project, 'unknown');
   });
 
   socket.on('dead', function(d) {

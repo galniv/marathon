@@ -94,14 +94,18 @@ app.on 'start', (data) ->
   project.start()
 
 app.on 'browse', (data) ->
-  log.info "browsing #{data.name}"
   project = getProjectNamed(data.name)
-  cp.exec "open #{project.path}"
+  if config.actions?.terminal?
+    log.info "opening terminal for #{data.name}"
+    cp.exec "#{config.actions.terminal} #{project.path}"
+  else  
+    log.info "browsing #{data.name}"
+    cp.exec "open #{project.path}"
 
 app.on 'view', (data) ->
   log.info "viewing #{data.name}"
   project = getProjectNamed(data.name)
-  cp.exec "open http://#{data.name}.#{config.tld}"
+  cp.exec "open http://#{data.name}.#{config.tld}:#{project.port}"
 
 app.on 'edit', (data) ->
   project = getProjectNamed(data.name)

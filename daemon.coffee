@@ -56,7 +56,11 @@ update = ->
     if not (name in projectNames)
       newbie = new Project name: name
       do (newbie) ->
-        newbie.start(port: getNextAvailablePort())
+        # start the project unless autoStart is explicitly set to false
+        unless config.projects.autoStart is false
+          newbie.start port: getNextAvailablePort()
+        else
+          newbie.getEnv port: getNextAvailablePort()
         newbie.onAny (data = {})->
           data.project = newbie.name
           web.emit this.event, data

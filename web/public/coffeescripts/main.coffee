@@ -6,7 +6,7 @@ updateScroll = ($log) ->
 updateStatus = (name, status) ->
   $project = $(".project[data-name='#{name}']")
   $status = $project.find(".status")
-  $status.removeClass("success warning error busy")
+  $status.removeClass("success warning error busy unknown")
   switch status
     when "starting", "stopping"
       $status.addClass("warning")
@@ -23,6 +23,10 @@ updateStatus = (name, status) ->
       $project.find('.restart,.stop').addClass('hide')
       $project.find('.start').removeClass('hide')
       symbol = "off"
+    when "unknown"
+      $status.addClass("unknown")
+      $project.find('.start,.restart,.stop').removeClass('hide')
+      symbol = "question-sign"
     else
       $project.find('.start').removeClass('hide')
       $project.find('.stop,.restart').addClass('hide')
@@ -89,6 +93,10 @@ socket.on 'started', (d) ->
 socket.on 'stopped', (d) ->
   console.log "stopped"
   updateStatus d.project, 'stopped'
+
+socket.on 'unknown', (d) ->
+  console.log "unknown"
+  updateStatus d.project, 'unknown'
 
 socket.on 'dead', (d) ->
   console.log "dead"

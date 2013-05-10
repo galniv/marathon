@@ -8,12 +8,14 @@
   },
   "projects": {
     "max": 40,
-    "path": "PROJECTS",
+    "path": "/Users/galniv/.marathon",
     "lowestPort": 20310,
-    "logs": "LOGS"
+    "logs": "/Users/galniv/.marathon/logs",
+    "autoStart": false
   },
-  "tld": "TLD",
+  "tld": "dev",
   "actions": {
-    "editcmd": "EDITOR"
+    "terminal": "open -a Terminal",
+    "editcmd": "open -a Sublime\\ Text\\ 2"
   }
 }
