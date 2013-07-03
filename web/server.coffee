@@ -62,6 +62,9 @@ app.configure ->
 app.get '/', (req, res) ->
   res.render 'home.html', projects: app.projects
 
+app.get '/configure', (req, res) ->
+  res.render 'configure.html', projects: app.projects
+
 app.get '/status', (req, res) ->
   res.send 'ok!'
 

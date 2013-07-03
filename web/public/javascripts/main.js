@@ -124,6 +124,14 @@
     });
   });
 
+  $(".runTests").click(function() {
+    var name;
+    name = $(this).closest(".project").data('name');
+    return socket.emit('runTests', {
+      name: name
+    });
+  });
+
   socket.on('stopping', function(d) {
     console.log("stopping");
     return updateStatus(d.project, 'stopping');

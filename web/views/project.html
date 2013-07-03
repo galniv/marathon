@@ -20,6 +20,10 @@
       <i class="icon icon-white icon-th-list"></i>
       <span class="text">browse</span>
     </button>
+    <!-- <button class="btn runTests control">
+      <i class="icon icon-white icon-check"></i>
+      <span class="text">run tests</span>
+    </button> -->
     {% if project.server %}
     <button class="btn restart control">
       <i class="icon icon-white icon-refresh"></i>
@@ -41,7 +45,7 @@
     <img src="/{{ project.name }}/favicon">
   </div>
   {{ project.name }}
-
+  
   {% if project.server %}
   <div class="console hide">
     <div class="log">

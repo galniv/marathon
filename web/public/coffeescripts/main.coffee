@@ -78,6 +78,10 @@ $(".start").click ->
   name = $(@).closest(".project").data 'name'
   socket.emit 'restart', name: name
 
+$(".runTests").click ->
+  name = $(@).closest(".project").data 'name'
+  socket.emit 'runTests', name: name
+
 socket.on 'stopping', (d) ->
   console.log "stopping"
   updateStatus d.project, 'stopping'

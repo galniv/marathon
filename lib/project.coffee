@@ -16,8 +16,10 @@ module.exports = class Project extends EventEmitter
     @id = uuid()
     @name = options.name
     @path = config.projects.path(@name)
+    @workingDir = @path.toString()
     @favicon = @findFavicon()
     @log = new File "#{config.projects.logs}/#{@name}.log"
+    @testsLog = new File "#{config.projects.logs}/#{@name}-tests.log"
     process.on 'SIGINT', @destroy
 
   findFavicon: ->
@@ -60,13 +62,13 @@ module.exports = class Project extends EventEmitter
       env = @getEnv port: options.port
       
       if @package.contents()?.workingDir?
-        workingDir = @package.contents()?.workingDir
+        @workingDir = @package.contents()?.workingDir
       else
-        workingDir = @path.toString()
+        @workingDir = @path.toString()
 
       # spawn the process
       @process = cp.spawn command.shift(), command,
-        cwd: workingDir
+        cwd: @workingDir
         env: env
 
       # pipe data events
@@ -120,6 +122,32 @@ module.exports = class Project extends EventEmitter
       @stop()
     else
       @start port: @port
+
+  runTests: =>
+    if @process?
+      @stop()
+    command = @package.contents().scripts.test?.split ' '
+    if not command?
+      log.info "[#{@name}] no tests defined ..."
+      return
+    log.info "[#{@name}] running tests ..."
+    # spawn the process
+    @testProcess = cp.spawn command.shift(), command,
+      cwd: @workingDir
+      env: process.env
+
+    # pipe data events
+    @testProcess.stdout.on 'data', (d) =>
+      @emit 'log', message: d.toString()
+      fs.appendFile @testsLog.toString(), d
+    @testProcess.stderr.on 'data', (d) =>
+      @emit 'log', message: d.toString(), type: 'err'
+      fs.appendFile @testsLog.toString(), d
+
+    @testProcess.on 'exit', (code, signal) =>
+      log.info "[#{@name}] tests stopped"
+      @emit 'testsStopped'
+
 
   # shut down the server and clean up event listeners to destroy
   # the reference to this project

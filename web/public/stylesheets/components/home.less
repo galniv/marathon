@@ -1,4 +1,10 @@
 .home {
+  
+  #configure {
+    text-decoration: none;
+    float: right;
+    margin-bottom: 5px;
+  }
 
   .projects {
 
@@ -14,13 +20,20 @@
       .user-select(none);
       cursor: pointer;
       border-left: 5px solid @accent;
-      margin-top: 20px;
+      margin-top: 0px;
       padding: 0 0 0 @projectPadding;
       line-height: @projectHeight;
       font-size: @projectFontSize;
       font-weight: 100;
       letter-spacing: .08em;
       background: lighten(@bodyBackground, 5%);
+      
+      @media (min-width: 481px) {
+        display: inline-block;
+        width: 100%;
+        letter-spacing: .06em;
+      }
+
       &:hover {
         background: lighten(@bodyBackground, 8%);
         color: white;
@@ -61,7 +74,7 @@
 
         .status {
           float: right;
-          width: 120px;
+          width: 140px;
           padding: 0 @projectPadding 0 @projectPadding;
 
           @media (max-width:767px) {
